@@ -55,7 +55,6 @@ describe('http', () => {
       (err) => {
         expect(err.status).toEqual(400)
         expect(err.statusCode).toEqual(400)
-        expect(err.response.text).toEqual('hi')
       }
     )
   })

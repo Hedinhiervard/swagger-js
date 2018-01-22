@@ -11,7 +11,7 @@ export const self = {
 
 // Handles fetch-like syntax and the case where there is only one object passed-in
 // (which will have the URL as a property). Also serilizes the response.
-export default function http(url, request = {}) {
+export default async function http(url, request = {}) {
   if (typeof url === 'object') {
     request = url
     url = request.url
@@ -25,7 +25,7 @@ export default function http(url, request = {}) {
   self.mergeInQueryOrForm(request)
 
   if (request.requestInterceptor) {
-    request = request.requestInterceptor(request) || request
+    request = await request.requestInterceptor(request) || request
   }
 
   // for content-type=multipart\/form-data remove content-type from request before fetch
@@ -37,31 +37,49 @@ export default function http(url, request = {}) {
   }
 
   // eslint-disable-next-line no-undef
-  return (request.userFetch || fetch)(request.url, request).then((res) => {
-    const serialized = self.serializeRes(res, url, request).then((_res) => {
-      if (request.responseInterceptor) {
-        _res = request.responseInterceptor(_res) || _res
-      }
-      return _res
-    })
+  let res = await (request.userFetch || fetch)(request.url, request)
+  let riRes
+  let riError
 
-    if (!res.ok) {
-      const error = new Error(res.statusText)
-      error.statusCode = error.status = res.status
-      return serialized.then(
-        (_res) => {
-          error.response = _res
-          throw error
-        },
-        (resError) => {
-          error.responseError = resError
-          throw error
-        }
-      )
+  if (request.responseInterceptor) {
+    try {
+      riRes = await request.responseInterceptor(res)
     }
+    catch (err) {
+      riError = err
+    }
+    res = riRes || res
+  }
 
-    return serialized
-  })
+  let serialized
+  let sErr
+
+
+  try {
+    serialized = await self.serializeRes(res, url, request)
+  }
+  catch (err) {
+    sErr = err
+  }
+
+  if (request.responseInterceptor){
+    console.log(res.body)
+  }
+
+
+  if (!res.ok || riError || sErr) {
+    const error = new Error(res.statusText)
+    error.statusCode = error.status = res.status
+    if (!sErr && !riError) {
+      error.response = res
+    }
+    else {
+      error.responseError = sErr || riError
+    }
+    throw error
+  }
+
+  return serialized
 }
 
 // exported for testing
