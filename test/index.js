@@ -525,15 +525,18 @@ describe('constructor', () => {
       }, cb)
     })
 
-    it('should support response interceptor', async function () {
-      const client = await new Swagger({
+    it('should support response interceptor', function (cb) {
+      new Swagger({
         url: 'http://petstore.swagger.io/v2/swagger.json',
         responseInterceptor: (res) => {
           res.body.id = 4
         }
-      })
-      const data = await client.apis.pet.getPetById({petId: 3})
-      expect(data.body.id).toEqual(4)
+      }).then((client) => {
+        client.apis.pet.getPetById({petId: 3}).then((data) => {
+          expect(data.body.id).toEqual(4)
+          cb()
+        })
+      }, cb)
     })
 
     it('should support request interceptor when fetching a spec and remote ref', function (cb) {

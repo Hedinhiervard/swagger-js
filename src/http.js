@@ -40,10 +40,19 @@ export default async function http(url, request = {}) {
   let res = await (request.userFetch || fetch)(request.url, request)
   let riRes
   let riError
+  let serialized
+  let serializeErr
+
+  try {
+    serialized = await self.serializeRes(res, url, request)
+  }
+  catch (err) {
+    serializeErr = err
+  }
 
   if (request.responseInterceptor) {
     try {
-      riRes = await request.responseInterceptor(res)
+      riRes = await request.responseInterceptor(serialized)
     }
     catch (err) {
       riError = err
@@ -51,30 +60,14 @@ export default async function http(url, request = {}) {
     res = riRes || res
   }
 
-  let serialized
-  let sErr
-
-
-  try {
-    serialized = await self.serializeRes(res, url, request)
-  }
-  catch (err) {
-    sErr = err
-  }
-
-  if (request.responseInterceptor){
-    console.log(res.body)
-  }
-
-
-  if (!res.ok || riError || sErr) {
+  if (!res.ok || riError || serializeErr) {
     const error = new Error(res.statusText)
     error.statusCode = error.status = res.status
-    if (!sErr && !riError) {
-      error.response = res
+    if (!serializeErr && !riError) {
+      error.response = serialized
     }
     else {
-      error.responseError = sErr || riError
+      error.responseError = serializeErr || riError
     }
     throw error
   }
