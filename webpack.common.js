@@ -23,7 +23,6 @@ module.exports = {
       loader: 'babel-loader',
       query: babelrc,
       exclude: [
-        /node_modules/
       ]
     }]
   },
