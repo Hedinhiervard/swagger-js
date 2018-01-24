@@ -26,7 +26,8 @@
     "lint": "eslint src/ test/",
     "deps-license": "license-checker --production --csv --out $npm_package_config_deps_check_dir/licenses.csv && license-checker --development --csv --out $npm_package_config_deps_check_dir/licenses-dev.csv",
     "deps-size": "webpack -p --config webpack.check.js --json | webpack-bundle-size-analyzer >| $npm_package_config_deps_check_dir/sizes.txt",
-    "deps-check": "npm run deps-license && npm run deps-size"
+    "deps-check": "npm run deps-license && npm run deps-size",
+    "prepublish": "npm build"
   },
   "keywords": [
     "oai",
