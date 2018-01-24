@@ -1,5 +1,8 @@
 const webpack = require('webpack')
 const path = require('path')
+const fs = require('fs')
+
+const babelrc = JSON.parse(fs.readFileSync('./.babelrc'))
 
 module.exports = {
   entry: {
@@ -18,6 +21,7 @@ module.exports = {
     loaders: [{
       test: /\.js/,
       loader: 'babel-loader',
+      query: babelrc,
       exclude: [
         /node_modules/
       ]
